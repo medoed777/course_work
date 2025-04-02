@@ -6,18 +6,20 @@ from dotenv import load_dotenv
 # Загружаем переменные окружения из файла .env
 load_dotenv()
 
-APIKEY = os.getenv("API_KEY_TWELVE_DATA")
+
+
 
 def get_stock_prices(stocks):
     """Функция для получения курса акций"""
     prices = {}
-
-    base_url = 'https://api.twelvedata.com/time_series'
+    APIKEY = os.getenv("API_KEY_ALPHA")
+    base_url = 'https://www.alphavantage.co/query'
 
     for stock in stocks:
         params = {
+            'function': 'TIME_SERIES_INTRADAY',
             'symbol': stock,
-            'interval': '1min',
+            'interval': '5min',
             'apikey': APIKEY
         }
 
@@ -26,8 +28,10 @@ def get_stock_prices(stocks):
             response.raise_for_status()  # Проверка на ошибки HTTP
 
             data = response.json()
-            if 'values' in data and len(data['values']) > 0:
-                prices[stock] = data['values'][0]['close']  # Получаем цену закрытия последней записи
+            if 'Time Series (5min)' in data:
+                # Получаем последнюю запись
+                latest_time = sorted(data['Time Series (5min)'].keys())[0]
+                prices[stock] = data['Time Series (5min)'][latest_time]['4. close']  # Цена закрытия
             else:
                 logging.error(f"Нет данных для {stock}. Ответ: {data}")
 
@@ -45,8 +49,10 @@ def get_stock_prices(stocks):
 
 # Пример использования
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.ERROR)  # Настройка уровня логирования
-    # stocks_to_check = ['AAPL', 'EUR/USD', 'CBQK']  # Пример списка акций
-    # prices = get_stock_prices(stocks_to_check)
-    # print(prices)
-    print(f"API Key: {APIKEY}")
+    logging.basicConfig(level=logging.ERROR)  # Настройка уровня логирования
+    stocks_to_check = ['AAPL', 'MSFT', 'IBM']  # Пример списка акций
+    prices = get_stock_prices(stocks_to_check)
+    print(prices)
+
+
+

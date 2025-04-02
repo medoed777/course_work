@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import pandas as pd
-
 from typing import Any, Dict, List
 import requests
 from dotenv import load_dotenv
@@ -55,13 +54,14 @@ def get_expense_data(start_date, end_date, file_path):
 def get_stock_prices(stocks):
     """Функция для получения курса акций"""
     prices = {}
-    APIKEY = os.getenv("API_KEY_TWELVE_DATA")
-    base_url = 'https://api.twelvedata.com/time_series'
+    base_url = 'https://www.alphavantage.co/query'
+    APIKEY = os.getenv("API_KEY_ALPHA")
 
     for stock in stocks:
         params = {
+            'function': 'TIME_SERIES_INTRADAY',
             'symbol': stock,
-            'interval': '1min',
+            'interval': '5min',
             'apikey': APIKEY
         }
 
@@ -70,8 +70,9 @@ def get_stock_prices(stocks):
             response.raise_for_status()
 
             data = response.json()
-            if 'values' in data and len(data['values']) > 0:
-                prices[stock] = data['values'][0]['close']
+            if 'Time Series (5min)' in data:
+                latest_time = sorted(data['Time Series (5min)'].keys())[0]
+                prices[stock] = data['Time Series (5min)'][latest_time]['4. close']
             else:
                 logging.error(f"Нет данных для {stock}. Ответ: {data}")
 
