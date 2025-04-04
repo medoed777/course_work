@@ -33,7 +33,7 @@ def load_user_settings() -> Any:
     return {}
 
 
-def get_expense_data(start_date: datetime, end_date: datetime, file_path: str) -> pd.DataFrame:
+def get_expense_data(start_date: Union[str, datetime], end_date: Union[str, datetime], file_path: str) -> pd.DataFrame:
     """Функция для получения данных о расходах из Excel файла."""
     try:
         df = pd.read_excel(file_path)
@@ -47,8 +47,8 @@ def get_expense_data(start_date: datetime, end_date: datetime, file_path: str) -
 
     df["Дата платежа"] = pd.to_datetime(df["Дата платежа"], errors="coerce", dayfirst=True)
 
-    start_date = pd.to_datetime(start_date, dayfirst=False) if isinstance(start_date, str) else start_date
-    end_date = pd.to_datetime(end_date, dayfirst=False) if isinstance(end_date, str) else end_date
+    start_date = pd.to_datetime(start_date, dayfirst=True) if isinstance(start_date, str) else start_date
+    end_date = pd.to_datetime(end_date, dayfirst=True) if isinstance(end_date, str) else end_date
 
     filtered_df = df[(df["Дата платежа"] >= start_date) & (df["Дата платежа"] <= end_date)]
 
@@ -97,7 +97,7 @@ def get_stock_prices(stocks: list[str]) -> Any:
     return stock_prices
 
 
-def get_currency_rate(currencies: list[str]) -> list[dict[str, str | float | None]]:
+def get_currency_rate(currencies: list[str]) -> Any:
     """Возвращает список словарей курсов валют по отношению к рублю."""
     apikey = os.getenv("API_KEY_APILAYER")
     headers = {"apikey": f"{apikey}"}
