@@ -1,14 +1,15 @@
 from datetime import datetime
-from utils import load_user_settings, get_expense_data, generate_response
-import pandas as pd
+
+from src.utils import generate_response, get_expense_data, load_user_settings
 
 
 def main(date_input: str) -> None:
-    date = datetime.strptime(date_input, '%Y-%m-%d %H:%M:%S')
+    """Основная функция для запуска и генерации отчета"""
+    date = datetime.strptime(date_input, "%Y-%m-%d %H:%M:%S")
     start_date = date.replace(day=1)
     end_date = date
 
-    expense_data = get_expense_data(start_date, end_date, '../data/operations.xlsx')
+    expense_data = get_expense_data(start_date, end_date, "../data/operations.xlsx")
 
     user_settings = load_user_settings()
 
