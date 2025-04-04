@@ -19,7 +19,7 @@ file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
 
-def load_user_settings():
+def load_user_settings() -> dict:
     """Функция для получения пользовательских настроек из JSON файла."""
     try:
         with open("user_settings.json", "r", encoding="utf-8") as f:
@@ -31,7 +31,7 @@ def load_user_settings():
     return {}
 
 
-def get_expense_data(start_date, end_date, file_path):
+def get_expense_data(start_date: str, end_date: str, file_path: str) -> pd.DataFrame:
     """Функция для получения данных о расходах из Excel файла."""
     try:
         df = pd.read_excel(file_path)
@@ -56,7 +56,7 @@ def get_expense_data(start_date, end_date, file_path):
     return filtered_df
 
 
-def get_stock_prices(stocks):
+def get_stock_prices(stocks: list[str]) -> list[dict[str,str|float|None]]:
     """Функция для получения курса акций."""
     stock_prices = []
     base_url = 'https://www.alphavantage.co/query'
@@ -100,7 +100,7 @@ def get_stock_prices(stocks):
     return stock_prices
 
 
-def get_currency_rate(currencies):
+def get_currency_rate(currencies: list[str]) -> list[dict[str, str|float|None]]:
     """Возвращает список словарей курсов валют по отношению к рублю."""
     apikey = os.getenv("API_KEY_APILAYER")
     headers = {"apikey": f"{apikey}"}
@@ -135,7 +135,7 @@ def get_currency_rate(currencies):
 
 
 
-def generate_response(expense_data, user_settings):
+def generate_response(expense_data: pd.DataFrame, user_settings: dict) -> str:
     """Создает ответ, содержащий информацию о расходах, включая топ-транзакции,
     приветствие, сводку по картам, курсы валют и цены акций."""
 
