@@ -2,13 +2,13 @@ import json
 import logging
 from typing import Any
 from unittest.mock import MagicMock, Mock, mock_open, patch
-
+from datetime import datetime
 import pandas as pd
 import pytest
 import requests
 from pytest import MonkeyPatch
 
-from src.utils import get_currency_rate, get_expense_data, get_stock_prices, load_user_settings
+from src.utils import get_currency_rate, get_expense_data, get_stock_prices, load_user_settings, generate_response
 
 log_dir = "../logs"
 logger = logging.getLogger("utils")
@@ -227,3 +227,43 @@ def test_get_currency_rate_http_error() -> None:
         result = get_currency_rate(currencies)
 
         assert result == []
+
+
+def test_generate_response_with_no_expenses() -> None:
+    expense_data = pd.DataFrame(columns=["Номер карты", "Сумма платежа", "Дата платежа", "Категория", "Описание"])
+    expense_data["Сумма платежа"] = pd.to_numeric(expense_data["Сумма платежа"], errors="coerce")
+    user_settings = {}
+
+    result = generate_response(expense_data, user_settings)
+    parsed_result = json.loads(result)
+
+    assert parsed_result["greeting"] is not None
+    assert parsed_result["cards"] == []
+    assert parsed_result["top_transactions"] == []
+    assert parsed_result["currency_rates"] == []
+    assert parsed_result["stock_prices"] == []
+
+
+def test_generate_response_with_expenses() -> None:
+    expense_data = pd.DataFrame(
+        {
+            "Номер карты": ["1234567890123456", "1234567890123456", "9876543210123456"],
+            "Сумма платежа": [100.50, 200.75, 50.25],
+            "Дата платежа": [datetime(2023, 9, 29), datetime(2023, 9, 30), datetime(2023, 9, 30)],
+            "Категория": ["Еда", "Транспорт", "Развлечения"],
+            "Описание": ["Покупка еды", "Поездка на такси", "Поход в кино"],
+        }
+    )
+
+    user_settings = {"user_currencies": ["USD", "EUR"], "user_stocks": ["AAPL", "GOOGL"]}
+
+    with patch("src.utils.get_currency_rate", return_value=[{"currency": "USD", "rate": 73.50}]):
+        with patch("src.utils.get_stock_prices", return_value=[{"stock": "AAPL", "price": 150.00}]):
+            result = generate_response(expense_data, user_settings)
+            parsed_result = json.loads(result)
+
+            assert parsed_result["greeting"] is not None
+            assert len(parsed_result["cards"]) == 2
+            assert parsed_result["top_transactions"][0]["amount"] == 200.75
+            assert len(parsed_result["currency_rates"]) == 1
+            assert len(parsed_result["stock_prices"]) == 1
